@@ -1,13 +1,14 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "/api/auth/";//for production
 // Separate instance ONLY for refresh — bypasses the interceptor
 const REFRESH_URL = axios.create({
-    baseURL: "/api/auth/",
+    baseURL: BASE_URL,
     withCredentials: true,
 });
 
 const BACKEND_URL = axios.create({
-    baseURL : "/api/auth/",
+    baseURL : BASE_URL,
     withCredentials: true, // needed to send the refreshToken cookie
 })
 

@@ -6,6 +6,7 @@ import sessionModel from "../models/session.model.js";
 import Note from "../models/note.model.js";
 import { ref } from "process";
 
+const isProduction = process.env.NODE_ENV === "production";
 
 export async function register(req, res){
     const {username, email, password} = req.body;
@@ -57,8 +58,8 @@ export async function register(req, res){
     
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
         maxAge: 7*60*60*24*1000
     })
 
@@ -114,8 +115,8 @@ export async function login(req, res){
     })
     res.cookie("refreshToken", refreshToken,{
         httpOnly:true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
         maxAge: 7*24*3600*1000
     })
     res.status(200).json({
@@ -208,8 +209,8 @@ export async function refreshToken(req,res){
 
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
         maxAge: 7*60*60*24*1000
     })
 
