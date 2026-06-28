@@ -1,5 +1,6 @@
 import { Router } from "express";  
 import * as authController from "../controllers/auth.controller.js"
+import { protect } from "../middleware/auth.middleware.js";
 
 const authRouter = Router();
 
@@ -23,13 +24,13 @@ authRouter.get("/logout-all", authController.logoutAll)
 
 
 // POST api/auth/create-note
-authRouter.post("/create-note", authController.createNote)
+authRouter.post("/create-note",protect,  authController.createNote)
 
 // get api/auth/get-notes
-authRouter.get("/get-notes", authController.getNotes)
+authRouter.get("/get-notes",protect,  authController.getNotes)
 // post api/auth/get-notes
-authRouter.post("/update-note/:id", authController.updateNote)
+authRouter.put("/update-note/:id",protect,  authController.updateNote)
 // get api/auth/get-notes
-authRouter.get("/delete-note/:id", authController.deleteNote)
+authRouter.delete("/delete-note/:id",protect,  authController.deleteNote)
 
 export default authRouter;

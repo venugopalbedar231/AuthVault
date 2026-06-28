@@ -58,7 +58,7 @@ export async function register(req, res){
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7*60*60*24*1000
     })
 
@@ -115,7 +115,7 @@ export async function login(req, res){
     res.cookie("refreshToken", refreshToken,{
         httpOnly:true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7*24*3600*1000
     })
     res.status(200).json({
@@ -209,7 +209,7 @@ export async function refreshToken(req,res){
     res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 7*60*60*24*1000
     })
 
@@ -221,6 +221,7 @@ export async function refreshToken(req,res){
 
 export async function logout(req, res){
 
+    console.log("All cookies:", req.cookies); // add this
     const refreshToken = req.cookies.refreshToken;
     if(!refreshToken){
         return res.status(400).json({
@@ -282,56 +283,61 @@ export async function logoutAll(req,res){
 }
 
 
-export async function createNote(req, res){
-    try{
-        const {title, content} = req.body;
-        if(!title || !content){
-            return res.status(400).json({
-                message:"Title and content are required"
-            })
+export async function createNote(req, res) {
+    try {
+        const { title, content } = req.body;
+        if (!title || !content) {
+            return res.status(400).json({ message: "Title and content are required" });
         }
-        const newNote = new Note({title, content})
+        // Attach the authenticated user's ID to the note
+        const newNote = new Note({ title, content, user: req.user._id });
         await newNote.save();
-        res.status(201).json(newNote)
-    }catch(error){
-        res.status(500).json({message:error.message})
+        res.status(201).json(newNote);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
-export async function getNotes(req, res){
-    try{
-        const notes = await Note.find().sort({createdAt:-1})
-        res.status(200).json(notes)
 
-    }catch(error){
-        res.status(500).json({message:error.message})
+export async function getNotes(req, res) {
+    try {
+        // Only fetch notes belonging to the logged-in user
+        const notes = await Note.find({ user: req.user._id }).sort({ createdAt: -1 });
+        res.status(200).json(notes);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
-export async function updateNote(req, res){
-    try{
-        const {title, content} = req.body;
-        const updateNote = await Note.findByIdAndUpdate(req.params.id, {title, content}, 
-            {new:true}
-        )
-        if(!updateNote){
-            return res.status(400).json({
-                message:"Could not Update"
-            })
+
+export async function updateNote(req, res) {
+    try {
+        const { title, content } = req.body;
+        // Match both _id AND user so users can't touch each other's notes
+        const updated = await Note.findOneAndUpdate(
+            { _id: req.params.id, user: req.user._id },
+            { title, content },
+            { new: true, runValidators: true }
+        );
+        if (!updated) {
+            return res.status(404).json({ message: "Note not found or not authorized" });
         }
-        res.send(201).json(updateNote)
-    }catch(error){
-        res.status(500).json({message:error.message})
+        res.status(200).json(updated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
-export async function deleteNote(req, res){
-    try{
-        const deleteNote = await Note.findByIdAndDelete(req.params.id)
-        if(!deleteNote){
-            return res.status(400).json({
-                message:"Note not found"
-            })
+
+export async function deleteNote(req, res) {
+    try {
+        // Match both _id AND user so users can't delete each other's notes
+        const deleted = await Note.findOneAndDelete({
+            _id: req.params.id,
+            user: req.user._id,
+        });
+        if (!deleted) {
+            return res.status(404).json({ message: "Note not found or not authorized" });
         }
-        res.send(201).json(deleteNote)
-    }catch(error){
-        res.status(500).json({message:error.message})
+        res.status(200).json({ message: "Note deleted successfully" });   // fix: was res.send(201) which crashes
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }
