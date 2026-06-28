@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Skull } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import BACKEND_URL from "../api/url";
 
@@ -23,9 +23,9 @@ function Navbar() {
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <BookOpen className="w-7 h-7 text-blue-400" />
+          <Skull className="w-7 h-7 text-blue-400" />
           <span className=" text-2xl text-blue-400 tracking-wide">
-            Notes App
+            TermiNote
           </span>
         </Link>
 
